@@ -1,0 +1,7 @@
+{
+  "name": "longmemeval-oracle",
+  "graders": ["../longmemeval/graders.ts"],
+  "judge": {
+    "model": "openai/gpt-4o-2024-08-06"
+  }
+}
