@@ -116,7 +116,7 @@ The graders, one line each:
 - `clause-precision`: every cited passage contains the clause; for an absent clause, nothing is cited.
 - `citation-support`: every sentence is supported by its cited passages; an uncited sentence passes only as a statement about the documents (judge).
 - `removal`: no protected span survives; `leakage`: no protected span reached the model (measured at the proxy); `retention`: 90% of the other content survives.
-- `longmemeval`: the official LongMemEval judge (`gpt-4o-2024-08-06`, its own yes/no template per question type) says the answer contains the gold answer, or abstains when the question is unanswerable.
+- `longmemeval`: the official LongMemEval judge prompts (a yes/no template per question type) say the answer contains the gold answer, or abstains when the question is unanswerable. The official judge is `gpt-4o-2024-08-06`; the suite names the repo's standard judge instead, a substitution the report records.
 
 Import scripts: `benchmarks/asqa/import.ts` and `benchmarks/cuad/import.ts` (see their
 headers). The raw data is not in the repository.

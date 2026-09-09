@@ -4,7 +4,9 @@ import { fieldsOf } from '../../src/gold.js';
 
 // the official LongMemEval scorer (src/evaluation/evaluate_qa.py at commit 9e0b455): one yes/no
 // question to the judge, with a template per question type, and the abstention template for a
-// question whose id carries _abs. the official judge is gpt-4o-2024-08-06, named in benchmark.json.
+// question whose id carries _abs. the official judge is gpt-4o-2024-08-06; benchmark.json names the
+// repo's standard judge instead (deepseek flash), because the provider workspace blocks OpenAI
+// models: a substitution the protocol allows, and run.json and the report record the judge used.
 // loaded through benchmark.json
 export { graders };
 // internal API, exported for tests
