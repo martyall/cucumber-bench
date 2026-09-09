@@ -99,6 +99,8 @@ type SystemUnderTest = {
   suites?: string[];
   // the models this system calls: its own choice, declared in its manifest
   models: Models;
+  // the system's own settings from its manifest, forwarded to it as they are
+  options?: { [key: string]: unknown };
   // the proxy is the only way to reach a model
   run(c: PublicCase, ctx: { runId: string; repetition: number; proxy: ModelProxy }): Promise<Omit<RunResult, 'latencyMs'>>;
 };

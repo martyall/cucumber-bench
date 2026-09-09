@@ -74,6 +74,18 @@ describe('sandboxedSystem', () => {
     assert.equal(result.output, '');
   });
 
+  it('should forward the manifest options on stdin, and {} without any', async () => {
+    let { pub } = (await loadCases('benchmarks/legalbench'))[0];
+    // the child answers with the options it was given
+    let echo = 'let s="";process.stdin.on("data",(d)=>s+=d).on("end",()=>process.stdout.write(JSON.stringify({ output: JSON.stringify(JSON.parse(s).options) })))';
+    let argv = [process.execPath, '-e', echo];
+    let ctx = { runId: 't', repetition: 1, proxy };
+    let withOptions = sandboxedSystem('probe', argv, models, undefined, undefined, undefined, { contextTokens: 250000 });
+    assert.equal((await withOptions.run(pub, ctx)).output, '{"contextTokens":250000}');
+    assert.deepEqual(withOptions.options, { contextTokens: 250000 });
+    assert.equal((await sandboxedSystem('probe', argv, models).run(pub, ctx)).output, '{}');
+  });
+
   it('should pass a skipped case through with its reason and trace, not as an error', async () => {
     let { pub } = (await loadCases('benchmarks/legalbench'))[0];
     let decline = 'process.stdout.write(JSON.stringify({ skipped: "context_overflow: 300 tokens > 200", trace: { stages: [] } }))';

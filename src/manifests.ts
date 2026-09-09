@@ -22,6 +22,9 @@ type HarnessManifest = {
   // not a secret; keyEnv names the env variable that holds the key (default: none)
   providers?: { [model: string]: { baseUrl: string; keyEnv?: string } };
   maxCalls?: number; // model calls per run this harness needs; default BENCH_MAX_CALLS (20)
+  // the harness's own settings (a context limit, an overflow policy, ...): forwarded on stdin
+  // as they are, and recorded in run.json. the core does not read them
+  options?: { [key: string]: unknown };
   image: string; // docker image; the shared base image unless the harness has its own
   imageEntry: string; // the entry path inside the image
   dockerfile?: string; // relative to dir; present when the harness builds its own image
@@ -45,6 +48,7 @@ async function loadHarnesses(root: string): Promise<HarnessManifest[]> {
     let m = JSON.parse(await readFile(join(dir, 'harness.json'), 'utf8'));
     assert(m.name && m.entry && Array.isArray(m.suites), `${dir}/harness.json needs name, entry, suites`);
     assert(typeof m.models?.main === 'string', `${dir}/harness.json needs models.main: the harness names its own model`);
+    assert(m.options === undefined || (typeof m.options === 'object' && !Array.isArray(m.options)), `${dir}/harness.json: options must be an object`);
     // a providers key that names no model would silently route that model to the default upstream
     for (let model of Object.keys(m.providers ?? {})) {
       assert(typeof m.providers[model].baseUrl === 'string', `${dir}/harness.json: providers[${model}] needs a baseUrl`);

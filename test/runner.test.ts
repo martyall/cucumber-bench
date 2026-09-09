@@ -116,6 +116,19 @@ describe('runSuite', () => {
     assert.equal(records[0].status, 'grade_error');
   });
 
+  it('should leave out the jobs a resume already has, and keep the rest in order', async () => {
+    let cases = (await loadCases('benchmarks/legalbench')).slice(0, 3);
+    let done = new Set([`fake/${cases[1].pub.id}/1`, `fake/${cases[0].pub.id}/2`]);
+    let records = await runSuite({
+      runId: 'test', cases, systems: [fakeSystem('Yes')], graders: [exactGrader()], proxy, judgeFor: () => 'j', repetitions: 2,
+      skip: (job) => done.has(`${job.system}/${job.caseId}/${job.repetition}`),
+    });
+    assert.deepEqual(
+      records.map((r) => `${r.run.caseId}/${r.run.repetition}`),
+      [`${cases[0].pub.id}/1`, `${cases[2].pub.id}/1`, `${cases[1].pub.id}/2`, `${cases[2].pub.id}/2`],
+    );
+  });
+
   it('should leave a skipped run ungraded, with the status unsupported', async () => {
     let cases = (await loadCases('benchmarks/legalbench')).slice(0, 1);
     let declining: SystemUnderTest = {

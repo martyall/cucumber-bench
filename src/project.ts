@@ -40,7 +40,7 @@ async function loadProject(opts: { judgeOverride?: string } = {}): Promise<Proje
         Object.fromEntries(
           Object.entries(h.providers).map(([model, p]) => [model, { url: p.baseUrl, key: keyFromEnv(p.keyEnv, `harness ${h.name}`) }]),
         );
-      return [h.name, sandboxedSystem(h.name, argvFor(h), models, h.suites, h.maxCalls, upstreams)];
+      return [h.name, sandboxedSystem(h.name, argvFor(h), models, h.suites, h.maxCalls, upstreams, h.options)];
     }),
   );
 

@@ -1,13 +1,14 @@
 // shared plumbing for dependency-free harnesses: protocol io and the proxy client.
 // no runtime imports, so the base image is node + tsx + this directory.
-// protocol: stdin {publicCase, proxyUrl, token, models} -> stdout {output, trace?} | {error}
+// protocol: stdin {publicCase, proxyUrl, token, models, options} -> stdout {output, trace?} | {error} | {skipped, trace?}
 import type { Models, PublicCase, Trace } from '../src/types.js';
 
 export { readInput, generateVia, respond, type Input, type Generate };
 
 // models: the harness's own choice from its manifest.
-// main is for the guarded route, safety for the trusted safety route
-type Input = { publicCase: PublicCase; proxyUrl: string; token: string; models: Models };
+// main is for the guarded route, safety for the trusted safety route.
+// options: the manifest's options object, as it is ({} when the manifest has none)
+type Input = { publicCase: PublicCase; proxyUrl: string; token: string; models: Models; options: { [key: string]: unknown } };
 type Generate = (prompt: string, temperature?: number) => Promise<string>;
 
 async function readInput(): Promise<Input> {
@@ -38,6 +39,6 @@ function generateVia(proxyUrl: string, token: string, model: string, route = '/v
   };
 }
 
-function respond(obj: { output: string; trace?: Trace } | { error: string }) {
+function respond(obj: { output: string; trace?: Trace } | { error: string } | { skipped: string; trace?: Trace }) {
   process.stdout.write(JSON.stringify(obj));
 }

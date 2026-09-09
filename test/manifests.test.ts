@@ -24,6 +24,21 @@ describe('manifests', () => {
     assert.equal(direct.imageEntry, '/app/direct/src/entry.ts');
   });
 
+  it('should keep a manifest\'s options as they are, and refuse options that are not an object', async () => {
+    let root = await mkdtemp(join(tmpdir(), 'harnesses-'));
+    let write = async (name: string, options: unknown) => {
+      await mkdir(join(root, name), { recursive: true });
+      await writeFile(join(root, name, 'harness.json'), JSON.stringify({ name, entry: 'entry.ts', suites: [], models: { main: 'm' }, options }));
+    };
+    await write('a', { contextTokens: 250000, overflow: 'skip' });
+    await write('b', undefined);
+    let [a, b] = await loadHarnesses(root);
+    assert.deepEqual(a.options, { contextTokens: 250000, overflow: 'skip' });
+    assert.equal(b.options, undefined);
+    await write('c', ['skip']);
+    await assert.rejects(loadHarnesses(root), /c\/harness.json: options must be an object/);
+  });
+
   it('should load core graders by name and custom graders from a module', async () => {
     let bs = await loadBenchmarks('benchmarks');
     assert.deepEqual(bs.map((b) => [b.name, b.graders.map((g) => g.name)]), [

@@ -11,7 +11,7 @@ const TIMEOUT_MS = 300_000;
 // every system runs this way: a child process with a bare environment (development
 // mode: it shares the file system), or a docker container in docker mode, speaking
 // the wire protocol. stdin gets {publicCase, proxyUrl,
-// token, models} as json, stdout returns {output, trace?}, {error}, or {skipped, trace?}
+// token, models, options} as json, stdout returns {output, trace?}, {error}, or {skipped, trace?}
 // when the harness declines the case (e.g. it exceeds the context limit). the child
 // never receives private cases, api keys, or the upstream url; usage and the
 // prompts that reached the model come from the proxy, not from the child.
@@ -22,6 +22,7 @@ function sandboxedSystem(
   suites?: string[],
   maxCalls?: number,
   upstreams?: { [model: string]: { url: string; key: string } },
+  options: { [key: string]: unknown } = {},
 ): SystemUnderTest {
   // a container reaches the host proxy through the gateway name, not loopback
   let docker = argv[0] === 'docker';
@@ -29,10 +30,11 @@ function sandboxedSystem(
     name,
     suites,
     models,
+    options,
     async run(c, ctx) {
       let token = ctx.proxy.register(`${ctx.runId}/${c.id}/rep${ctx.repetition}`, { models: Object.values(models), maxCalls, upstreams });
       let proxyUrl = docker ? ctx.proxy.url.replace('127.0.0.1', 'host.docker.internal') : ctx.proxy.url;
-      let payload = JSON.stringify({ publicCase: c, proxyUrl, token, models });
+      let payload = JSON.stringify({ publicCase: c, proxyUrl, token, models, options });
 
       // a named container can be killed on timeout; killing the docker cli alone leaves it running.
       // systems run at the same time on the same case, so the name carries the system too

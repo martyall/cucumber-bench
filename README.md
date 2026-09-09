@@ -25,6 +25,7 @@ npm test
 | `--reps n` | repetitions per case (default 1) |
 | `--concurrency n` | runs in flight at once (default 1; use 10 with a hosted model) |
 | `--no-details` | no gold-derived details in the report, for a shared report of a test set |
+| `--resume runs/<id>` | continue an interrupted run, with the same flags: its records are kept and their jobs skipped. Refused when systems, cases, case content, reps, judges, sandbox or providers differ from its `run.json`; a changed commit is a warning |
 
 Other commands: `npm run regrade -- runs/<id> [--judge model]` grades stored outputs
 again without running a harness; `npm run chart -- runs/<id> [runs/<id> ...]` regenerates

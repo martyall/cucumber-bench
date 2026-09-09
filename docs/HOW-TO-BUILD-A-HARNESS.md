@@ -16,13 +16,14 @@ The harness is a program. It reads one JSON object from stdin and writes one to 
                   "question": "...", "choices": ["..."] },
   "proxyUrl": "http://127.0.0.1:PORT",
   "token": "the bearer token of this run",
-  "models": { "main": "...", "safety": "...", "compose": "..." }
+  "models": { "main": "...", "safety": "...", "compose": "..." },
+  "options": { "contextTokens": 250000 }
 }
 ```
 
 `docs` are passages the answer may cite as `[1][2]`, numbered from 1. `examples` are worked
 examples. `question` and `choices` exist for label tasks only. `models` are the manifest's,
-extra roles included.
+extra roles included. `options` is the manifest's `options` object as it is (`{}` without one).
 
 **stdout**: `{ "output": "...", "trace": { ... } }` or `{ "error": "message" }`. A harness that
 cannot take a case, e.g. one beyond its context limit, writes `{ "skipped": "context_overflow: ...", "trace"?: { ... } }`
@@ -66,6 +67,7 @@ without touching the tests.
 | `models` | `main` required, `safety` defaults to `main`, further roles (e.g. `compose`) as needed; all usable on the guarded route |
 | `providers` | per-model upstreams: `{ "<model-id>": { "baseUrl": "...", "keyEnv": "HF_TOKEN" } }`. `keyEnv` names the env variable with the key. A model not named uses `BENCH_BASE_URL` |
 | `maxCalls` | a higher call limit, e.g. one call per passage |
+| `options` | the harness's own settings, e.g. `{ "contextTokens": 250000, "overflow": "skip" }`: forwarded on stdin as they are, recorded in `run.json`. The core never reads them. A variant with other settings is a second folder with the same `entry` |
 | `image`, `imageEntry`, `dockerfile` | for a harness with dependencies: its own docker image |
 
 **The same harness with another model** (e.g. a finetune): a second folder whose manifest

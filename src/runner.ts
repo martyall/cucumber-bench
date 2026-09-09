@@ -25,9 +25,11 @@ async function runSuite(opts: {
   judgeFor: (suite: string) => string;
   repetitions: number;
   concurrency?: number;
+  // a resumed run: the jobs that already have a record are left out
+  skip?: (job: { system: string; caseId: string; repetition: number }) => boolean;
   onRecord?: (r: RunRecord) => void;
 }): Promise<RunRecord[]> {
-  let { runId, cases, systems, graders, proxy, judgeFor, repetitions, concurrency = 1 } = opts;
+  let { runId, cases, systems, graders, proxy, judgeFor, repetitions, concurrency = 1, skip } = opts;
   assert(repetitions >= 1, `runSuite: repetitions must be >= 1, got ${repetitions}`);
   assert(concurrency >= 1, `runSuite: concurrency must be >= 1, got ${concurrency}`);
 
@@ -36,7 +38,12 @@ async function runSuite(opts: {
   let jobs: { system: SystemUnderTest; rep: number; pub: Case['pub']; priv: Case['priv'] }[] = [];
   for (let system of systems) {
     let mine = system.suites ? cases.filter((c) => system.suites!.includes(c.pub.suite)) : cases;
-    for (let rep = 1; rep <= repetitions; rep++) for (let { pub, priv } of mine) jobs.push({ system, rep, pub, priv });
+    for (let rep = 1; rep <= repetitions; rep++) {
+      for (let { pub, priv } of mine) {
+        if (skip?.({ system: system.name, caseId: pub.id, repetition: rep })) continue;
+        jobs.push({ system, rep, pub, priv });
+      }
+    }
   }
   let records: RunRecord[] = new Array(jobs.length);
   await pool(jobs, concurrency, async ({ system, rep, pub, priv }, i) => {
