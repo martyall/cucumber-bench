@@ -104,6 +104,7 @@ function buildChartHtml(runId: string, cases: Case[], records: RunRecord[], help
         higher,
       });
     num('error rate ↓', false, (r) => r?.errors, (v) => `${Math.round(v * 100)}%`);
+    num('unsupported ↓', false, (r) => r?.unsupported, (v) => `${Math.round(v * 100)}%`);
     num('consistency ↑', true, (r) => r?.consistency, (v) => `${Math.round(v * 100)}%`);
     num('latency s ↓', false, (r) => r?.latencyMs, (v) => `${round1(v / 1000)}`);
     num('model calls per run ↓', false, (r) => r?.calls, (v) => `${round1(v)}`);
@@ -235,6 +236,7 @@ ${tables}
   <ul class="defs">
     ${graders.map((g) => `<li><b>${esc(g)}</b>: ${esc(help.graders[g] || 'No description.')}</li>`).join('\n    ')}
     <li><b>error rate</b>: the share of runs that failed in the sandbox or in a grader. A failed run counts as a failed grade.</li>
+    <li><b>unsupported</b>: the share of runs the harness skipped, e.g. because the case exceeds its context limit. A skipped run is not graded and is out of every rate.</li>
     <li><b>consistency</b>: the share of repetitions that gave the same answer for a case, averaged over the cases. n/a with one repetition.</li>
     <li><b>latency s</b>: the average time of one run, in seconds, sandbox start included.</li>
     <li><b>model calls per run</b>: the average number of model calls in one run, safety-model calls included.</li>

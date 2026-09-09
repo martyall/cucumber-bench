@@ -90,7 +90,21 @@ describe('summarize', () => {
     ];
     let row = summarize(cases, records).find((r) => r.task === 'ALL')!;
     assert.equal(row.errors, 0.75);
+    assert.equal(row.unsupported, 0);
     assert.equal(row.graders.exact.pass, 0.25);
+  });
+
+  it('should keep a skipped run out of the pass rate, the errors and the consistency', () => {
+    let cases = [{ pub: { id: 'a', suite: 'lb', task: 't1', instructions: '', input: '' }, priv: { id: 'a', graders: ['exact'], answer: 'yes' } } as Case];
+    let skipped = { ...record('a', 3, ''), grades: [], status: 'unsupported' as const };
+    skipped.run.skipped = 'context_overflow';
+    let records = [record('a', 1, 'yes'), record('a', 2, 'yes'), skipped];
+    let row = summarize(cases, records).find((r) => r.task === 'ALL')!;
+    assert.equal(row.n, 3);
+    assert.equal(row.errors, 0);
+    assert.equal(Math.round(row.unsupported * 100), 33);
+    assert.equal(row.graders.exact.pass, 1);
+    assert.equal(row.consistency, 1);
   });
 });
 

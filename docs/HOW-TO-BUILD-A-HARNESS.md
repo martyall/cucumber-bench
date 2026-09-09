@@ -24,7 +24,10 @@ The harness is a program. It reads one JSON object from stdin and writes one to 
 examples. `question` and `choices` exist for label tasks only. `models` are the manifest's,
 extra roles included.
 
-**stdout**: `{ "output": "...", "trace": { ... } }` or `{ "error": "message" }`.
+**stdout**: `{ "output": "...", "trace": { ... } }` or `{ "error": "message" }`. A harness that
+cannot take a case, e.g. one beyond its context limit, writes `{ "skipped": "context_overflow: ...", "trace"?: { ... } }`
+instead: the run is not graded, the report counts it as **unsupported**, apart from the errors,
+and lists it with its reason. Never skip silently: an error is a failed grade, a skip is an exclusion.
 
 **Models**, only through the proxy, with `Authorization: Bearer {token}`, in the OpenAI
 chat-completions format:

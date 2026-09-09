@@ -104,7 +104,7 @@ let records = await runSuite({
   concurrency: Number(values.concurrency),
   onRecord(record) {
     let { run, grades } = record;
-    let verdict = grades.map((g) => `${g.pass ? 'PASS' : 'FAIL'} ${g.grader}`).join(', ');
+    let verdict = run.skipped ? `SKIP ${run.skipped}` : grades.map((g) => `${g.pass ? 'PASS' : 'FAIL'} ${g.grader}`).join(', ');
     // +Ns: seconds since the run started, to see the overlap of the jobs
     console.log(
       `  +${Math.round((Date.now() - started) / 1000)}s ${verdict} ${run.caseId} [${run.system}, rep ${run.repetition}] ${run.latencyMs}ms ` +

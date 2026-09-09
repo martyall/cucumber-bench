@@ -124,6 +124,8 @@ headers). The raw data is not in the repository.
   (0–1). Tune by the mean, claim by the pass rate.
 - **errors**: the share of runs that failed in the sandbox or a grader. They count as
   failed grades; the column tells you how much of a failure rate is infrastructure.
+- **unsupported**: the share of runs the harness skipped, e.g. a case beyond its context
+  limit. They are not graded and are out of every rate; the report lists each with its reason.
 - **paired comparison**: per suite and grader, wins/ties/losses of one system over another
   on the same cases, the mean difference, and a 95% bootstrap interval. An interval that
   contains 0 is consistent with no difference. 15 cases give about ±10 points; 100 give ±3.

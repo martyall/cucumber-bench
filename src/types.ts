@@ -76,6 +76,9 @@ type RunResult = Usage & {
   // wall time of run(), set by the runner
   latencyMs: number;
   error?: string;
+  // the harness declined the case, with the reason (e.g. context_overflow): the run is not
+  // graded, its record has the status unsupported, and it stays out of every rate
+  skipped?: string;
   // what actually reached the model: recorded by the proxy for sandboxes
   modelRequests?: string[];
   trace?: Trace;

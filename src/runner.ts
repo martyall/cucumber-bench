@@ -7,8 +7,9 @@ export { runSuite, gradeRun, pool, type RunRecord };
 
 // judge is the model usage of the graders for this run, apart from the harness usage.
 // status: ok, or the run failed in the sandbox (run_error), or a grader threw (grade_error);
-// both errors fail every grade, and the report counts them apart from answer quality
-type RunRecord = { run: RunResult; grades: GradeResult[]; judge: Usage; status: 'ok' | 'run_error' | 'grade_error' };
+// both errors fail every grade, and the report counts them apart from answer quality.
+// unsupported: the harness skipped the case; it has no grades and is out of every rate
+type RunRecord = { run: RunResult; grades: GradeResult[]; judge: Usage; status: 'ok' | 'run_error' | 'grade_error' | 'unsupported' };
 
 // runs every system on every case, grades each run, returns all records in a
 // fixed order (system, repetition, case). systems only ever see the public case;
@@ -72,7 +73,8 @@ async function runSuite(opts: {
 
 // grades one run with the graders its case lists. a run that failed in the sandbox is not
 // graded: every grader fails it. a grader that throws (e.g. the judge is down) fails its own
-// grade, not the run. the status says which of the two happened
+// grade, not the run. the status says which of the two happened. a skipped run has no
+// grades at all: a fail would put it into the pass rate, and it is not an answer
 async function gradeRun(
   pub: Case['pub'],
   priv: Case['priv'],
@@ -80,6 +82,7 @@ async function gradeRun(
   graders: Grader[],
   ctx: GradeContext,
 ): Promise<{ grades: GradeResult[]; status: RunRecord['status'] }> {
+  if (run.skipped) return { grades: [], status: 'unsupported' };
   let grades: GradeResult[] = [];
   let status: RunRecord['status'] = run.error ? 'run_error' : 'ok';
   for (let name of priv.graders) {

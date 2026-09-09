@@ -116,6 +116,23 @@ describe('runSuite', () => {
     assert.equal(records[0].status, 'grade_error');
   });
 
+  it('should leave a skipped run ungraded, with the status unsupported', async () => {
+    let cases = (await loadCases('benchmarks/legalbench')).slice(0, 1);
+    let declining: SystemUnderTest = {
+      ...fakeSystem(''),
+      async run(c, ctx) {
+        return { ...(await fakeSystem('').run(c, ctx)), skipped: 'context_overflow: 300 tokens > 200' };
+      },
+    };
+    let records = await runSuite({
+      runId: 'test', cases, systems: [declining], graders: [exactGrader()], proxy, judgeFor: () => 'j', repetitions: 1,
+    });
+    assert.equal(records.length, 1);
+    assert.equal(records[0].status, 'unsupported');
+    assert.deepEqual(records[0].grades, []);
+    assert.equal(records[0].run.skipped, 'context_overflow: 300 tokens > 200');
+  });
+
   it('should record a failing grade when a system throws', async () => {
     let cases = (await loadCases('benchmarks/legalbench')).slice(0, 1);
     let broken: SystemUnderTest = {

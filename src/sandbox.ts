@@ -11,7 +11,8 @@ const TIMEOUT_MS = 300_000;
 // every system runs this way: a child process with a bare environment (development
 // mode: it shares the file system), or a docker container in docker mode, speaking
 // the wire protocol. stdin gets {publicCase, proxyUrl,
-// token, models} as json, stdout returns {output, trace?} or {error}. the child
+// token, models} as json, stdout returns {output, trace?}, {error}, or {skipped, trace?}
+// when the harness declines the case (e.g. it exceeds the context limit). the child
 // never receives private cases, api keys, or the upstream url; usage and the
 // prompts that reached the model come from the proxy, not from the child.
 function sandboxedSystem(
@@ -38,13 +39,14 @@ function sandboxedSystem(
       let container = docker ? containerName(ctx.runId, name, c.id, ctx.repetition) : undefined;
       let cmd = container ? [argv[0], argv[1], '--name', container, ...argv.slice(2)] : argv;
       let { stdout, error } = await runChild(cmd, payload, container);
-      let output = '', trace;
+      let output = '', trace, skipped;
       if (!error) {
         try {
           let parsed = JSON.parse(stdout);
           output = parsed.output ?? '';
           trace = parsed.trace;
           error = parsed.error;
+          skipped = parsed.skipped;
         } catch {
           error = `sandbox wrote invalid json: ${stdout.slice(0, 200)}`;
         }
@@ -55,6 +57,7 @@ function sandboxedSystem(
         repetition: ctx.repetition,
         output,
         error,
+        skipped,
         trace,
         modelRequests: ctx.proxy.requests(token),
         ...ctx.proxy.usage(token),

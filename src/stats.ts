@@ -12,6 +12,9 @@ type Row = {
   system: string;
   n: number;
   errors: number; // share of runs that failed in the sandbox or in a grader (they count as failed grades too)
+  // share of runs the harness skipped (status unsupported); they have no grades, so they are
+  // out of the pass rates below, and out of errors and consistency
+  unsupported: number;
   // per grader: pass rate and mean score, both 0..1
   graders: { [name: string]: { pass: number; score: number } };
   consistency?: number; // 0..1, undefined with a single repetition
@@ -110,7 +113,8 @@ function summarize(cases: Case[], records: RunRecord[]): Row[] {
           task,
           system,
           n: rs.length,
-          errors: avg(rs.map((r) => (statusOf(r) === 'ok' ? 0 : 1))),
+          errors: avg(rs.map((r) => (statusOf(r) === 'run_error' || statusOf(r) === 'grade_error' ? 1 : 0))),
+          unsupported: avg(rs.map((r) => (statusOf(r) === 'unsupported' ? 1 : 0))),
           graders,
           consistency: consistencyOf(rs),
           latencyMs: avg(rs.map((r) => r.run.latencyMs)),
@@ -139,9 +143,11 @@ function statusOf(r: RunRecord): RunRecord['status'] {
 // average majority share of answers per case across repetitions: 1 means every
 // repetition gave the same answer. the answer is the primary grader's extracted
 // label, or the whole output for tasks without one. undefined with a single rep.
+// a skipped run is not an answer and does not count
 function consistencyOf(rows: RunRecord[]): number | undefined {
   let byCase = new Map<string, string[]>();
   for (let r of rows) {
+    if (statusOf(r) === 'unsupported') continue;
     let answers = byCase.get(r.run.caseId) ?? [];
     answers.push(r.grades[0]?.extracted ?? r.run.output.trim());
     byCase.set(r.run.caseId, answers);

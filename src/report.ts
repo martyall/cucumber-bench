@@ -33,12 +33,12 @@ function buildReport(runId: string, cases: Case[], records: RunRecord[], graders
     let suiteRows = rows.filter((r) => r.suite === suite);
     let graders = [...new Set(suiteRows.flatMap((r) => Object.keys(r.graders)))];
     lines.push(`## Suite: ${suite}`, '');
-    lines.push(`| task | system | n | errors | ${graders.join(' | ')} | consistency | avg latency ms | avg tokens in/out | avg calls | harness cost/run | judge cost/run | total cost, all runs |`);
-    lines.push(`|${' --- |'.repeat(graders.length + 11)}`);
+    lines.push(`| task | system | n | errors | unsupported | ${graders.join(' | ')} | consistency | avg latency ms | avg tokens in/out | avg calls | harness cost/run | judge cost/run | total cost, all runs |`);
+    lines.push(`|${' --- |'.repeat(graders.length + 12)}`);
     for (let r of suiteRows) {
       let cells = graders.map((g) => gradeCell(r.graders[g]));
       lines.push(
-        `| ${r.task} | ${r.system} | ${r.n} | ${pct(r.errors)} | ${cells.join(' | ')} | ${r.consistency === undefined ? 'n/a' : pct(r.consistency)} ` +
+        `| ${r.task} | ${r.system} | ${r.n} | ${pct(r.errors)} | ${pct(r.unsupported)} | ${cells.join(' | ')} | ${r.consistency === undefined ? 'n/a' : pct(r.consistency)} ` +
           `| ${r.latencyMs.toFixed(0)} | ${r.tokensIn.toFixed(0)}/${r.tokensOut.toFixed(0)} | ${r.calls.toFixed(1)} ` +
           `| ${usd(r.costUsd)} | ${usd(r.judgeCostUsd)} | ${r.costUsd === undefined ? 'n/a' : '$' + (r.n * (r.costUsd + (r.judgeCostUsd ?? 0))).toFixed(2)} |`,
       );
@@ -64,6 +64,7 @@ function buildReport(runId: string, cases: Case[], records: RunRecord[], graders
   let glossary = graders.filter((g) => used.has(g.name));
   if (glossary.length > 0) {
     lines.push('errors: the share of runs that failed in the sandbox or in a grader; they count as failed grades too.', '');
+    lines.push('unsupported: the share of runs the harness skipped (e.g. the case exceeds its context limit); they are not graded and are out of every rate.', '');
     lines.push('Graders (a cell is the pass rate; a value in parentheses is the mean score when it differs):', '');
     for (let g of glossary) lines.push(`- ${g.name}: ${g.description}`);
     lines.push('');
@@ -76,6 +77,14 @@ function buildReport(runId: string, cases: Case[], records: RunRecord[], graders
     lines.push(run.error ? `${head} error: ${run.error}` : head);
   }
   lines.push('');
+
+  // skipped runs are not failures; they are listed so an exclusion is never silent
+  let skipped = records.filter((r) => r.run.skipped);
+  if (skipped.length > 0) {
+    lines.push(`## Skipped (${skipped.length})`, '');
+    for (let { run } of skipped) lines.push(`- ${run.caseId} [${run.system}, rep ${run.repetition}]: ${run.skipped}`);
+    lines.push('');
+  }
   return lines.join('\n');
 }
 

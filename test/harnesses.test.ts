@@ -74,6 +74,16 @@ describe('sandboxedSystem', () => {
     assert.equal(result.output, '');
   });
 
+  it('should pass a skipped case through with its reason and trace, not as an error', async () => {
+    let { pub } = (await loadCases('benchmarks/legalbench'))[0];
+    let decline = 'process.stdout.write(JSON.stringify({ skipped: "context_overflow: 300 tokens > 200", trace: { stages: [] } }))';
+    let result = await sandboxedSystem('probe', [process.execPath, '-e', decline], models).run(pub, { runId: 't', repetition: 1, proxy });
+    assert.equal(result.error, undefined);
+    assert.equal(result.skipped, 'context_overflow: 300 tokens > 200');
+    assert.equal(result.output, '');
+    assert.deepEqual(result.trace, { stages: [] });
+  });
+
   it('should report a sandbox that dies as an errored run', async () => {
     let { pub } = (await loadCases('benchmarks/legalbench'))[0];
     let system = sandboxedSystem('sandboxed', [process.execPath, '-e', 'process.exit(3)'], models);
