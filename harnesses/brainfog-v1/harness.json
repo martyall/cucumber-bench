@@ -1,0 +1,10 @@
+{
+  "name": "brainfog-v1",
+  "description": "Retrieval agent: the case's sessions indexed in memory (Qwen3-Embedding-0.6B and BM25, fused), the model searches them by meaning, words and date with one tool, then answers. The brainfog repository, run from ../brainfog.",
+  "entry": "src/entry.ts",
+  "suites": ["longmemeval", "longmemeval-dev"],
+  "models": {
+    "main": "qwen/qwen3.6-35b-a3b"
+  },
+  "maxCalls": 16
+}
